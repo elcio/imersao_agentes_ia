@@ -6,6 +6,7 @@ from crawler import Crawler
 from rich import print
 
 knowledge = Knowledge(
+    name='Base de Conhecimentos da Visie',
     vector_db=LanceDb(
         uri="lancedb/knowledge1",
         table_name="visie",

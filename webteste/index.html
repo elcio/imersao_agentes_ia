@@ -4,40 +4,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title></title>
-    <link href="css/style.css" rel="stylesheet">
+    <style>
+    div {
+      background: #FCC;
+    }
+    div.complete {
+      background: #CFC;
+    }
+    </style>
   </head>
   <body>
+
+    <section class="messages">
+    </section>
+
     <form>
-      <textarea name="msg"></textarea> 
+      <input name="msg" type="text" autofocus>
       <button>Enviar</button>
     </form>
-    <div class="messages">
-    </div>
+
     <script>
     if(!localStorage.session_id) {
       localStorage.session_id = Math.random();
     }
     document.querySelector('form').addEventListener('submit', async function(e) {
       e.preventDefault();
-      var msg = document.querySelector('textarea[name=msg]').value;
+
+      const messages = document.querySelector('.messages')
+      const input = document.querySelector('input[name=msg]')
+      const msg = input.value
+
+      input.value = ''
+
+      const msgElement = document.createElement('p');
+      msgElement.innerText = msg;
+      messages.appendChild(msgElement);
+
+      const respElement = document.createElement('div');
+      messages.appendChild(respElement);
+
+
       var api_url = 'http://localhost:8000/agents/gepete/runs'
+
       const formData = new FormData();
       formData.append('message', msg);
       formData.append('session_id', localStorage.session_id);
-      formData.append('stream', 'false');
+      formData.append('stream', 'true');
+
       var f = await fetch(api_url, {
         method: 'POST',
         headers: {
           'accept': 'application/json'
         },
         body: formData,
-        mode: 'no-cors',
       })
-      console.log('body:', await f.text());
-      var r = await f.json();
-      var messages = document.querySelector('.messages');
-      messages.innerHTML += `<p>${r.content}</p>`;
-      document.querySelector('textarea[name=msg]').value = '';
+
+      const reader = f.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let responseText = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+          break;
+        }
+        const events = decoder.decode(value).split('\n').filter(e => e.indexOf('data:') === 0);
+        console.log('events:', events)
+        for (const event of events) {
+          try {
+            const data = JSON.parse(event.slice(5));
+            if(data.event=="RunContent"){
+              responseText += data.content
+              respElement.innerHTML = responseText
+            }
+            if(data.event=="RunCompleted"){
+              respElement.innerHTML = data.content
+              respElement.classList.add('complete')
+            }
+          } catch (e) { }
+        }
+
+      }
+
     })
 
     </script>

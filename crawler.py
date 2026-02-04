@@ -19,8 +19,6 @@ class Crawler:
             if url in self.visited:
                 continue
             self.visit(url)
-            if len(self.data) >= 500:
-                break
         return self.data
 
     def visit(self, url):
