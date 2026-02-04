@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+    <link href="css/style.css" rel="stylesheet">
+  </head>
+  <body>
+    <form>
+      <textarea name="msg"></textarea> 
+      <button>Enviar</button>
+    </form>
+    <div class="messages">
+    </div>
+    <script>
+    if(!localStorage.session_id) {
+      localStorage.session_id = Math.random();
+    }
+    document.querySelector('form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var msg = document.querySelector('textarea[name=msg]').value;
+      var api_url = 'http://localhost:8000/agents/gepete/runs'
+      const formData = new FormData();
+      formData.append('message', msg);
+      formData.append('session_id', localStorage.session_id);
+      formData.append('stream', 'false');
+      var f = await fetch(api_url, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json'
+        },
+        body: formData,
+        mode: 'no-cors',
+      })
+      console.log('body:', await f.text());
+      var r = await f.json();
+      var messages = document.querySelector('.messages');
+      messages.innerHTML += `<p>${r.content}</p>`;
+      document.querySelector('textarea[name=msg]').value = '';
+    })
+
+    </script>
+  </body>
+</html>
