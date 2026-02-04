@@ -4,29 +4,26 @@ from agno.learn import LearningMachine
 from rich import print
 from kbase import knowledge
 from agno.tools.wikipedia import WikipediaTools
+from tools import envia_contato, manifesto, lista_blog
 
 db = SqliteDb("agent.sqlite")
 
+with open('instructions.txt', 'r') as f:
+    instructions = f.read()
+
 agent = Agent(
-    name="Gepete",
+    name="Vivi",
     model="openai:gpt-4o-mini",
     db=db,
     add_history_to_context=True,
     num_history_runs=5,
     knowledge=knowledge,
-    tools=[WikipediaTools()],
+    tools=[WikipediaTools(), envia_contato, manifesto, lista_blog],
     learning=LearningMachine(
         knowledge=knowledge,
         learned_knowledge=True,
-    # update_memory_on_run=True,
-    # enable_agentic_memory=True,
     ),
-    instructions="""
-    Você é um agente especializado que deve SEMPRE consultar a base de conhecimentos.
-
-    Se a informação que o usuário busca não estiver na base de conhecimentos, busque na Wikipedia. Sempre aprenda com o conteúdo que você trouxer da Wikipedia. Extraia, se possível, pelo menos três fatos para aprender cada vez que fizer uma busca lá.
-
-    Se não achar nada lá, não responda, mesmo que você saiba a resposta. Se o usuário te disser fatos, confie nele, a não ser que ele contradiga algo que está na base de conhecimento. Nossos usuários costumam estar bem informados, aprenda com eles.""",
+    instructions=instructions,
 )
 
 

@@ -17,3 +17,5 @@ fastmcp
 scikit-learn
 openpyxl
 joblib
+yfinance
+feedparser
