@@ -1,6 +1,7 @@
 import requests
 from enum import Enum
-from agno.tools import tool
+from agno.tools import tool, Toolkit
+from agno.run import RunContext
 from feedparser import parse
 import time
 
@@ -68,4 +69,39 @@ def lista_blog() -> list:
             for post in posts['entries']
         ]
 
+
+class CarrinhoCompras(Toolkit):
+
+    def __init__(self, allow_remove: bool=False, **kwargs):
+        tools = [
+            self.adiciona_ao_carrinho,
+            self.lista_carrinho,
+        ]
+        if allow_remove:
+            tools.append(self.remove_do_carrinho)
+        instructions = "ferramentas para manter o carrinho de compras"
+        super().__init__(
+            name="Carrinho de Compras",
+            instructions=instructions,
+            tools=tools,
+            stop_after_tool_call_tools=['lista_carrinho'],
+        )
+
+    def adiciona_ao_carrinho(self, produto: str, run_context: RunContext) -> bool:
+        """Adiciona um produto ao carrinho de compras"""
+        if not produto in run_context.session_state['carrinho']:
+            run_context.session_state['carrinho'].append(produto)
+        return True
+
+    def remove_do_carrinho(self, produto: str, run_context: RunContext) -> bool:
+        """Remove um produto do carrinho de compras"""
+        run_context.session_state['carrinho'].remove(produto)
+        return True
+
+    def lista_carrinho(self, run_context: RunContext) -> list:
+        """Devolve a lista de produtos do carrinho de compras"""
+        retorno=""
+        for produto in run_context.session_state['carrinho']:
+            retorno += f"* {produto}\n"
+        return retorno
 

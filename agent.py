@@ -4,7 +4,9 @@ from agno.learn import LearningMachine
 from rich import print
 from kbase import knowledge
 from agno.tools.wikipedia import WikipediaTools
-from tools import envia_contato, manifesto, lista_blog
+from tools import envia_contato, manifesto, lista_blog, CarrinhoCompras
+from agno.guardrails import PromptInjectionGuardrail
+from hooks import detect_pii
 
 db = SqliteDb("agent.sqlite")
 
@@ -18,7 +20,20 @@ agent = Agent(
     add_history_to_context=True,
     num_history_runs=5,
     knowledge=knowledge,
-    tools=[WikipediaTools(), envia_contato, manifesto, lista_blog],
+    session_state={'carrinho': []},
+    tools=[
+        WikipediaTools(),
+        envia_contato,
+        manifesto,
+        lista_blog,
+        CarrinhoCompras(allow_remove=True),
+    ],
+    pre_hooks=[PromptInjectionGuardrail(
+        injection_patterns=[
+            "ignore as instruções anteriores",
+            "você agora é",
+        ]
+    ), detect_pii],
     learning=LearningMachine(
         knowledge=knowledge,
         learned_knowledge=True,
